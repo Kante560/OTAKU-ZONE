@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from "../components/Navbar";
 
+
 const Blog = () => {
   const [uploadedContent, setUploadedContent] = useState([]);
   const [showForm, setShowForm] = useState(false);
