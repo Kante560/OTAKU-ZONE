@@ -5,7 +5,7 @@ import Home from "./components/Home";
 import Blog from "./pages/Blog";
 import User from "./pages/User";
 import Post from "./pages/Post";
-import Login from "./pages/login";
+import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
 export default function App() {
