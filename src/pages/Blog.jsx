@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from "../components/Navbar";
-
+import { Link, useNavigate } from "react-router-dom";
 
 const Blog = () => {
   const [uploadedContent, setUploadedContent] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState("");
 
   // Form state (copied from Post.jsx)
   const [title, setTitle] = useState("");
@@ -136,6 +137,17 @@ const Blog = () => {
     <>
       <Navbar />
 
+      {/* Search Bar */}
+      <div className="max-w-3xl mx-auto mt-6 mb-4 px-4">
+        <input
+          type="text"
+          placeholder="Search blogs..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
+      </div>
+
       {/* Floating "+" Icon */}
       <button
         onClick={() => setShowForm(true)}
@@ -221,102 +233,123 @@ const Blog = () => {
 
       <div className="max-w-6xl mx-auto p-6">
         <h2 className="text-3xl font-bold mb-6">Blogs</h2>
+        {/* Revert to vertical stack, not grid */}
         <div className="space-y-6">
-          {uploadedContent.length > 0 ? (
-            uploadedContent.map((content, index) => (
-              <div
-                key={index}
-                className="flex flex-col md:flex-row bg-white shadow-md rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
-              >
-                {content.image && (
-                  <img
-                    src={content.image}
-                    alt="Uploaded"
-                    className="w-full md:w-1/3 object-cover transform transition-transform duration-300 hover:scale-110"
-                  />
-                )}
-                <div className="p-6 flex flex-col justify-between w-full">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      {content.title && (
-                        <h3 className="text-xl font-bold mb-2">{content.title}</h3>
-                      )}
-                      {content.writeUp && (
-                        <p className="text-gray-600 mb-4">{content.writeUp}</p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeletePost(index)}
-                      className="ml-4 text-red-500 hover:text-red-700 text-2xl"
-                      title="Delete Post"
+          {uploadedContent.filter(content =>
+            (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
+            (content.writeUp && content.writeUp.toLowerCase().includes(search.toLowerCase()))
+          ).length > 0 ? (
+            uploadedContent
+              .map((content, index) => ({ content, index }))
+              .filter(({ content }) =>
+                (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
+                (content.writeUp && content.writeUp.toLowerCase().includes(search.toLowerCase()))
+              )
+              .map(({ content, index }) => (
+                <div
+                  key={index}
+                  className="flex flex-col md:flex-row bg-white shadow-md rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
+                >
+                  {content.image && (
+                    <Link
+                      to={`/uploads/${index}`}
+                      className="w-full md:w-1/3 block"
+                      style={{ minWidth: 0 }}
                     >
-                      🗑️
-                    </button>
-                  </div>
-                  <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
-                    {/* Like/Dislike/Comment Section */}
-                    <div className="flex space-x-6 items-center">
-                      <button
-                        onClick={() => handleLike(index)}
-                        className={`flex items-center text-2xl ${
-                          content.likes > 0
-                            ? "text-green-600"
-                            : "text-gray-400 hover:text-green-500"
-                        }`}
-                        title="Like"
+                      <img
+                        src={content.image}
+                        alt="Uploaded"
+                        className="object-cover w-full h-full transition-transform duration-300 ease-in-out hover:scale-110"
+                        style={{ pointerEvents: "none" }}
+                      />
+                    </Link>
+                  )}
+                  <div className="p-6 flex flex-col justify-between w-full">
+                    <div className="flex justify-between items-start">
+                      <Link
+                        to={`/uploads/${index}`}
+                        className="flex-1"
+                        style={{ minWidth: 0 }}
                       >
-                        <span role="img" aria-label="like">👍</span>
-                        <span className="ml-2 text-base">{content.likes}</span>
-                      </button>
+                        {content.title && (
+                          <h3 className="text-xl font-bold mb-2">{content.title}</h3>
+                        )}
+                        {content.writeUp && (
+                          <p className="text-gray-600 mb-4">{content.writeUp}</p>
+                        )}
+                      </Link>
                       <button
-                        onClick={() => handleDislike(index)}
-                        className={`flex items-center text-2xl ${
-                          content.dislikes > 0
-                            ? "text-red-600"
-                            : "text-gray-400 hover:text-red-500"
-                        }`}
-                        title="Dislike"
+                        onClick={() => handleDeletePost(index)}
+                        className="ml-4 text-red-500 hover:text-red-700 text-2xl"
+                        title="Delete Post"
                       >
-                        <span role="img" aria-label="dislike">👎</span>
-                        <span className="ml-2 text-base">{content.dislikes}</span>
+                        🗑️
                       </button>
                     </div>
-                    {/* Comment Section */}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          value={commentInputs[index] || ""}
-                          onChange={e => handleCommentInput(index, e.target.value)}
-                          className="border border-gray-300 rounded-md px-3 py-1 w-full"
-                        />
+                    <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
+                      {/* Like/Dislike/Comment Section */}
+                      <div className="flex space-x-6 items-center">
                         <button
-                          onClick={() => handleAddComment(index)}
-                          className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700"
+                          onClick={() => handleLike(index)}
+                          className={`flex items-center text-2xl ${
+                            content.likes > 0
+                              ? "text-green-600"
+                              : "text-gray-400 hover:text-green-500"
+                          }`}
+                          title="Like"
                         >
-                          Comment
+                          <span role="img" aria-label="like">👍</span>
+                          <span className="ml-2 text-base">{content.likes}</span>
+                        </button>
+                        <button
+                          onClick={() => handleDislike(index)}
+                          className={`flex items-center text-2xl ${
+                            content.dislikes > 0
+                              ? "text-red-600"
+                              : "text-gray-400 hover:text-red-500"
+                          }`}
+                          title="Dislike"
+                        >
+                          <span role="img" aria-label="dislike">👎</span>
+                          <span className="ml-2 text-base">{content.dislikes}</span>
                         </button>
                       </div>
-                      <div className="mt-2 space-y-1">
-                        {(comments[index] || []).map((c, i) => (
-                          <div key={i} className="flex items-center text-sm text-gray-700 bg-gray-100 rounded px-2 py-1">
-                            <span className="flex-1">{c}</span>
-                            <button
-                              onClick={() => handleDeleteComment(index, i)}
-                              className="ml-2 text-xs text-red-400 hover:text-red-700"
-                              title="Delete Comment"
-                            >
-                              ❌
-                            </button>
-                          </div>
-                        ))}
+                      {/* Comment Section */}
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            placeholder="Add a comment..."
+                            value={commentInputs[index] || ""}
+                            onChange={e => handleCommentInput(index, e.target.value)}
+                            className="border border-gray-300 rounded-md px-3 py-1 w-full"
+                          />
+                          <button
+                            onClick={() => handleAddComment(index)}
+                            className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700"
+                          >
+                            Comment
+                          </button>
+                        </div>
+                        <div className="mt-2 space-y-1">
+                          {(comments[index] || []).map((c, i) => (
+                            <div key={i} className="flex items-center text-sm text-gray-700 bg-gray-100 rounded px-2 py-1">
+                              <span className="flex-1">{c}</span>
+                              <button
+                                onClick={() => handleDeleteComment(index, i)}
+                                className="ml-2 text-xs text-red-400 hover:text-red-700"
+                                title="Delete Comment"
+                              >
+                                ❌
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))
           ) : (
             <p className="text-center text-lg text-gray-500 py-10">No blogs uploaded yet.</p>
           )}

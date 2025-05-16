@@ -1,23 +1,51 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Navbar from "../components/Navbar";
+import { AuthContext } from "../context/AuthContext";
 
 const User = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const userData = {
-        username: "otaku_user",
-        email: "otaku@example.com",
-        joined: "2023-01-01",
-        // image: undefined // No image by default
-      };
-      setUserInfo(userData);
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access");
+        const email = localStorage.getItem("user_email");
+        const signupInfo = JSON.parse(localStorage.getItem("signup_info") || "null");
+        let mergedInfo = signupInfo || {};
+
+        if (token && email) {
+          // Fetch dashboard info using email as id
+          const response = await fetch(`https://otaku-hub-api.vercel.app/json/dashboard_read/${email}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            // Merge dashboard data with signup info (signup info takes precedence if dashboard field is missing)
+            mergedInfo = { ...data, ...mergedInfo };
+          }
+        }
+        setUserInfo(mergedInfo && Object.keys(mergedInfo).length > 0 ? mergedInfo : null);
+      } catch (err) {
+        // Fallback to signup info if API fails
+        const signupInfo = JSON.parse(localStorage.getItem("signup_info") || "null");
+        setUserInfo(signupInfo && Object.keys(signupInfo).length > 0 ? signupInfo : null);
+      }
+      setLoading(false);
     };
 
-    fetchUserInfo();
-  }, []);
+    if (isAuthenticated) {
+      fetchUserInfo();
+    } else {
+      setUserInfo(null);
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -35,12 +63,13 @@ const User = () => {
       <Navbar />
       <div className="max-w-4xl mx-auto mt-10 p-8 bg-white shadow-md rounded-lg">
         <h2 className="text-3xl font-extrabold mb-8 text-center tracking-wide">MY PROFILE</h2>
-        {userInfo ? (
+        {loading ? (
+          <p className="text-center text-lg text-gray-500 py-10">Loading user information...</p>
+        ) : userInfo ? (
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* User Image Section */}
             <div className="flex flex-col items-center mb-6 md:mb-0">
               <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mb-4 border-4 border-purple-500">
-                {/* Show preview if selected, else user's image, else placeholder */}
                 {imagePreview ? (
                   <img src={imagePreview} alt="User" className="object-cover w-full h-full" />
                 ) : userInfo.image ? (
@@ -65,21 +94,29 @@ const User = () => {
             {/* User Info Section */}
             <div className="flex-1 space-y-6">
               <div>
-                <p className="text-lg font-semibold text-gray-700 mb-1">Username</p>
-                <p className="text-xl text-gray-900 tracking-wide">{userInfo.username}</p>
+                <p className="text-lg font-semibold text-gray-700 mb-1">Name</p>
+                <p className="text-xl text-gray-900 tracking-wide">
+                  {userInfo.name || userInfo.username || userInfo.full_name || ""}
+                </p>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-gray-700 mb-1">Gender</p>
+                <p className="text-xl text-gray-900 tracking-wide">{userInfo.gender || ""}</p>
               </div>
               <div>
                 <p className="text-lg font-semibold text-gray-700 mb-1">Email</p>
-                <p className="text-xl text-gray-900 tracking-wide">{userInfo.email}</p>
+                <p className="text-xl text-gray-900 tracking-wide">{userInfo.email || ""}</p>
               </div>
-              <div>
-                <p className="text-lg font-semibold text-gray-700 mb-1">Joined</p>
-                <p className="text-xl text-gray-900 tracking-wide">{userInfo.joined}</p>
-              </div>
+              {userInfo.post_count && (
+                <div>
+                  <p className="text-lg font-semibold text-gray-700 mb-1">Post Count</p>
+                  <p className="text-xl text-gray-900 tracking-wide">{userInfo.post_count}</p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <p className="text-center text-lg text-gray-500 py-10">Loading user information...</p>
+          <p className="text-center text-lg text-gray-500 py-10">No user information found.</p>
         )}
       </div>
     </>

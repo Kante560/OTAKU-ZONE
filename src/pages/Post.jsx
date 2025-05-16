@@ -28,7 +28,7 @@ const Post = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl my-4 mx-auto p-6">
       <h2 className="text-3xl font-bold mb-6">Create Your Blog</h2>
       <div className="space-y-6">
         {/* Blog Title Input */}

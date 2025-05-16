@@ -1,16 +1,20 @@
 import React, { useState, useContext } from "react";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     password: "",
+    gender: "", // Add gender field
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dashboard, setDashboard] = useState(null); // For dashboard data
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const validate = () => {
     if (!formData.full_name.trim()) return "full_name is required.";
@@ -21,6 +25,9 @@ const Signup = () => {
     if (!formData.password) return "Password is required.";
     if (formData.password.length < 6)
       return "Password must be at least 6 characters.";
+    if (!formData.gender.trim()) return "Gender is required.";
+    if (formData.gender.length < 1 || formData.gender.length > 10)
+      return "Gender must be between 1 and 10 characters.";
     return null;
   };
 
@@ -50,7 +57,7 @@ const Signup = () => {
           full_name: formData.full_name, // required by server
           email: formData.email,       // must be valid email
           password: formData.password, // must meet server requirements
-          // Add any other required fields here if the API expects more
+          gender: formData.gender,     // Send gender in the request
         }),
       });
 
@@ -75,8 +82,28 @@ const Signup = () => {
         return;
       }
 
-      // Success
+      // Store email in localStorage
+      localStorage.setItem("user_email", formData.email); // for signup
+      // Store signup info for fallback in user page
+      localStorage.setItem("signup_info", JSON.stringify({
+        full_name: formData.full_name,
+        gender: formData.gender,
+        email: formData.email
+      }));
+
+      // Success: fetch dashboard info
+      // Use email as id if that's what your backend expects
+      const dashboardRes = await fetch(
+        `https://otaku-hub-api.vercel.app/json/dashboard_read/${formData.email}`
+      );
+      if (dashboardRes.ok) {
+        const dashboardData = await dashboardRes.json();
+        setDashboard(dashboardData);
+        // Optionally, store dashboardData in localStorage or context
+      }
+
       login();
+      navigate("/"); // Redirect to homepage
     } catch (err) {
       if (err.name === "TypeError") {
         setError("Network error. Please check your connection.");
@@ -96,7 +123,7 @@ const Signup = () => {
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700">full_name</label>
+            <label className="block text-gray-700">Name</label>
             <input
               type="text"
               name="full_name"
@@ -128,14 +155,51 @@ const Signup = () => {
               required
             />
           </div>
+          {/* Gender field */}
+          <div className="mb-4">
+            <label className="block text-gray-700">Gender</label>
+            <input
+              type="text"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-md"
+              required
+              minLength={1}
+              maxLength={10}
+              placeholder="Enter your gender"
+            />
+          </div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
+            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 flex items-center justify-center"
             disabled={loading}
           >
-            {loading ? "Signing up..." : "Signup"}
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                Signing up...
+              </>
+            ) : (
+              "Signup"
+            )}
           </button>
         </form>
+        {/* Optionally show dashboard info after signup */}
+        {dashboard && (
+          <div className="mt-6 p-4 bg-purple-50 rounded">
+            <h3 className="font-bold mb-2">Dashboard Info</h3>
+            <div><b>Name:</b> {dashboard.name}</div>
+            <div><b>Gender:</b> {dashboard.gender}</div>
+            <div><b>Post count:</b> {dashboard.post_count}</div>
+            {dashboard.image && (
+              <img src={dashboard.image} alt="User" className="w-24 h-24 rounded-full mt-2" />
+            )}
+          </div>
+        )}
       </div>
     </>
   );

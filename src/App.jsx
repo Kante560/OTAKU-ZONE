@@ -7,6 +7,7 @@ import User from "./pages/User";
 import Post from "./pages/Post";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Uploads from "./pages/Uploads";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/post" element={<Post />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/Uploads/:id" element={<Uploads />} />
       </Routes>
       <Footer />
     </AuthProvider>
