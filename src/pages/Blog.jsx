@@ -263,7 +263,7 @@ const Blog = () => {
                         style={{ pointerEvents: "none" }}
                       />
                     </Link>
-                  )}
+                   )}
                   <div className="p-6 flex flex-col justify-between w-full">
                     <div className="flex justify-between items-start">
                       <Link

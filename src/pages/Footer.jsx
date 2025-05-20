@@ -21,26 +21,17 @@ const Footer = () => {
         className="bg-purple-700 text-center py-8"
         style={{ backgroundSize: "200% 200%" }}
       >
-        <h2 className="text-2xl font-bold mb-2">Join Our Anime Community</h2>
-        <p className="mb-4">
+        <h2 className="text-2xl font-bold mb-2 ">Join Our Anime Community</h2>
+        <p className="mb-4 sm:max-w-[300px] md:max-w-7xl text-center mx-auto">
           Get exclusive content, participate in discussions, and stay updated
           with the latest in anime.
         </p>
-        <div className="flex justify-center items-center space-x-2">
-          <input
-            type="email"
-            placeholder="Your email address"
-            className="py-2 px-4 rounded-lg text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button className="bg-white text-purple-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-200">
-            Subscribe Now
-          </button>
-        </div>
+        
       </motion.div>
 
       {/* Center all grid content */}
       <div className="max-w-7xl mx-auto py-8 px-6 flex flex-col items-center justify-center text-center">
-        <div className="w-full grid ml-[430px] grid-cols-1 md:grid-cols-4 gap-10 overflow-hidden">
+        <div className="w-full flex text-center justify-center flex-col  max-w-[600px] gap-10 overflow-hidden">
           <div>
             <h3 className="text-lg font-bold bg-gradient-to-r  gradient-purple-500 mb-2">
               OTAKU VERSE
@@ -64,8 +55,8 @@ const Footer = () => {
 
           <div>
             <h3 className="text-lg font-bold mb-2">Subscribe</h3>
-            <p className="text-gray-400 text-sm mb-4">
               Get the latest anime news and updates delivered to your inbox.
+            <p className="text-gray-400 text-sm sm:text-center sm:flex sm:justify-center  mb-4">
             </p>
             <div className="flex justify-center space-x-2">
               <input
@@ -73,7 +64,10 @@ const Footer = () => {
                 placeholder="Your email"
                 className="py-2 px-4 rounded-lg text-gray-700 border border-gray-300"
               />
-              <button className="bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-white hover:text-purple-500">
+              <button 
+              
+              onClick={() => alert('subscribed')}
+              className="bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-white hover:text-purple-500">
                 Join
               </button>
             </div>

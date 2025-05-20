@@ -135,11 +135,7 @@ export default function Navbar() {
               </button>
             </li>
           )}
-          <li>
-            <button className="bg-white text-black py-2 px-4 rounded-lg hover:bg-black hover:text-white transition duration-300">
-              Subscribe
-            </button>
-          </li>
+     
         </ul>
       </div>
 

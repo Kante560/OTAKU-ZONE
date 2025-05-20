@@ -1,115 +1,102 @@
 import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     password: "",
-    gender: "", // Add gender field
+    gender: "",
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [dashboard, setDashboard] = useState(null); // For dashboard data
-  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const validate = () => {
-    if (!formData.full_name.trim()) return "full_name is required.";
-    if (!formData.email.trim()) return "Email is required.";
-    // Simple email regex
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      return "Invalid email address.";
-    if (!formData.password) return "Password is required.";
-    if (formData.password.length < 6)
-      return "Password must be at least 6 characters.";
-    if (!formData.gender.trim()) return "Gender is required.";
-    if (formData.gender.length < 1 || formData.gender.length > 10)
-      return "Gender must be between 1 and 10 characters.";
+    // Add your validation logic here
     return null;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setError(null);
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
       return;
     }
+
     setLoading(true);
+
     try {
-      // Make sure these keys/values match the server's expected format
       const response = await fetch("https://otaku-hub-api.vercel.app/api/register/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          full_name: formData.full_name, // required by server
-          email: formData.email,       // must be valid email
-          password: formData.password, // must meet server requirements
-          gender: formData.gender,     // Send gender in the request
+          full_name: formData.full_name,
+          email: formData.email,
+          password: formData.password,
+          gender: formData.gender,
         }),
       });
 
-      let data = null;
       const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      }
+      const data = contentType && contentType.includes("application/json") ? await response.json() : null;
 
       if (!response.ok) {
-        if (data && data.error) {
+        console.error("Signup failed:", data);
+
+        if (data?.error) {
           setError(data.error);
-        } else if (data && data.message) {
+        } else if (data?.message) {
           setError(data.message);
-        } else if (response.status === 409) {
-          setError("Email already exists.");
+        } else if (Array.isArray(data)) {
+          setError(data[0]?.msg || "Signup error occurred.");
         } else {
-          setError("Failed to signup. Please try again.");
-          console.log("Error response:", data.message);
+          setError(`Signup failed. Status: ${response.status}`);
         }
-        setLoading(false);
+
         return;
       }
 
-      // Store email in localStorage
-      localStorage.setItem("user_email", formData.email); // for signup
-      // Store signup info for fallback in user page
-      localStorage.setItem("signup_info", JSON.stringify({
-        full_name: formData.full_name,
-        gender: formData.gender,
-        email: formData.email
-      }));
-
-      // Success: fetch dashboard info
-      // Use email as id if that's what your backend expects
-      const dashboardRes = await fetch(
-        `https://otaku-hub-api.vercel.app/json/dashboard_read/${formData.email}`
-      );
-      if (dashboardRes.ok) {
-        const dashboardData = await dashboardRes.json();
-        setDashboard(dashboardData);
-        // Optionally, store dashboardData in localStorage or context
-      }
-
-      login();
-      navigate("/"); // Redirect to homepage
-    } catch (err) {
-      if (err.name === "TypeError") {
-        setError("Network error. Please check your connection.");
+      // If the API returns a token on signup:
+      if (data?.token) {
+        localStorage.setItem("auth_token", data.token);
+        login(data.token);
       } else {
-        setError(err.message || "An unexpected error occurred.");
+        // If not, you must manually call the login endpoint here:
+        const loginRes = await fetch("https://otaku-hub-api.vercel.app/api/token/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: formData.email, password: formData.password }),
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok && loginData.token) {
+          localStorage.setItem("auth_token", loginData.token);
+          login(loginData.token);
+        }
       }
+
+      localStorage.setItem("user_email", formData.email);
+      localStorage.setItem("signup_info", JSON.stringify(formData));
+      navigate("/user");
+    } catch (err) {
+      console.error("Network or unexpected error:", err);
+      setError("Network error. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -155,21 +142,7 @@ const Signup = () => {
               required
             />
           </div>
-          {/* Gender field */}
-          <div className="mb-4">
-            <label className="block text-gray-700">Gender</label>
-            <input
-              type="text"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
-              required
-              minLength={1}
-              maxLength={10}
-              placeholder="Enter your gender"
-            />
-          </div>
+        
           <button
             type="submit"
             className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 flex items-center justify-center"
@@ -188,18 +161,6 @@ const Signup = () => {
             )}
           </button>
         </form>
-        {/* Optionally show dashboard info after signup */}
-        {dashboard && (
-          <div className="mt-6 p-4 bg-purple-50 rounded">
-            <h3 className="font-bold mb-2">Dashboard Info</h3>
-            <div><b>Name:</b> {dashboard.name}</div>
-            <div><b>Gender:</b> {dashboard.gender}</div>
-            <div><b>Post count:</b> {dashboard.post_count}</div>
-            {dashboard.image && (
-              <img src={dashboard.image} alt="User" className="w-24 h-24 rounded-full mt-2" />
-            )}
-          </div>
-        )}
       </div>
     </>
   );

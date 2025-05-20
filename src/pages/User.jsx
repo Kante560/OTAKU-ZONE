@@ -1,38 +1,42 @@
 import React, { useEffect, useState, useContext } from "react";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const User = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useContext(AuthContext);
+  const { token, isAuthenticated, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("access");
         const email = localStorage.getItem("user_email");
         const signupInfo = JSON.parse(localStorage.getItem("signup_info") || "null");
         let mergedInfo = signupInfo || {};
 
         if (token && email) {
-          // Fetch dashboard info using email as id
-          const response = await fetch(`https://otaku-hub-api.vercel.app/json/dashboard_read/${email}`, {
+          const res = await fetch(`https://otaku-hub-api.vercel.app/json/dashboard_read/${email}`, {
             headers: {
-              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "Authorization": `Token ${token}`,
             },
           });
-          if (response.ok) {
-            const data = await response.json();
-            // Merge dashboard data with signup info (signup info takes precedence if dashboard field is missing)
+          if (res.status === 401) {
+            logout();
+            navigate("/login");
+            return;
+          }
+          if (res.ok) {
+            const data = await res.json();
             mergedInfo = { ...data, ...mergedInfo };
           }
         }
         setUserInfo(mergedInfo && Object.keys(mergedInfo).length > 0 ? mergedInfo : null);
       } catch (err) {
-        // Fallback to signup info if API fails
         const signupInfo = JSON.parse(localStorage.getItem("signup_info") || "null");
         setUserInfo(signupInfo && Object.keys(signupInfo).length > 0 ? signupInfo : null);
       }
@@ -45,7 +49,7 @@ const User = () => {
       setUserInfo(null);
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token, logout, navigate]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];

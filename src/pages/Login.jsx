@@ -21,6 +21,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("https://otaku-hub-api.vercel.app/api/token/", {
         method: "POST",
@@ -30,17 +31,20 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to login. Please check your credentials.");
+      const data = await response.json();
+
+      if (!response.ok || !data.token) {
+        setError(data?.error || "Failed to login. Please check your credentials.");
+        setLoading(false);
+        return;
       }
 
-      const data = await response.json();
-      console.log("Login successful:", data);
-      login(); // Set user as logged in
-      navigate("/"); // Redirect to homepage
+      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("user_email", formData.username);
+      login(data.token);
+      navigate("/user");
     } catch (err) {
-      console.error(err.message);
-      setError(err.message); // Set error message
+      setError("Network error. Please try again later.");
     } finally {
       setLoading(false);
     }
