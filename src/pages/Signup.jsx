@@ -75,6 +75,7 @@ const Signup = () => {
 
       // If the API returns a token on signup:
       if (data?.token) {
+        console.log("Signup successful:", data);
         localStorage.setItem("auth_token", data.token);
         login(data.token);
       } else {

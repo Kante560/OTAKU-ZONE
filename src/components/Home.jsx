@@ -39,10 +39,10 @@ export default function Home() {
               Explore
             </button>) : (
             <Link
-              to="/login"
+              to="/Signup"
               className="bg-white text-purple-700 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-200"
             >
-              Login
+              signup
             </Link>
             )}
             {isAuthenticated && (
