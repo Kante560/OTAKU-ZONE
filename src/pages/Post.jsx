@@ -8,6 +8,9 @@ const Post = ({ setShowForm, showForm }) => {
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState([]);
 
+  // Get current user email for ownership check
+  const userEmail = localStorage.getItem("user_email");
+
   // Handle image selection and preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -26,7 +29,7 @@ const Post = ({ setShowForm, showForm }) => {
       formData.append("title", title);
       formData.append("content", writeUp); // changed from writeUp to content
       if (imageFile) {
-        formData.append("image", imageFile);
+        formData.append("file", imageFile);
       }
       const res = await fetch("https://otaku-hub-api.vercel.app/api/post/", {
         method: "POST",
@@ -51,6 +54,28 @@ const Post = ({ setShowForm, showForm }) => {
     } catch (e) {
       alert("Failed to post blog");
       setLoading(false);
+    }
+  };
+
+  // Delete a post
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      const res = await fetch(`https://otaku-hub-api.vercel.app/api/post/${postId}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Token ${localStorage.getItem("auth_token")}`,
+        },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error || err?.message || "Failed to delete post");
+        return;
+      }
+      setPosts(posts.filter((post) => post.id !== postId));
+      alert("Post deleted");
+    } catch (e) {
+      alert("Failed to delete post");
     }
   };
 
@@ -147,7 +172,15 @@ const Post = ({ setShowForm, showForm }) => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="border rounded p-3 bg-gray-50">
-                  <div className="font-bold text-lg">{post.title}</div>
+                  <div className="flex justify-between items-center">
+                    <div className="font-bold text-lg">{post.title}</div>
+                    {/* Fix: check for both author (email or username) and is_owner, and log for debug */}
+                    {((post.author && (post.author === userEmail || post.author === userEmail.split('@')[0])) || post.is_owner) ? (
+                      <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-700 text-xl">🗑️</button>
+                    ) : (
+                      <span className="text-xs text-gray-400">{/* Debug: {post.author} | {userEmail} | {String(post.is_owner)} */}</span>
+                    )}
+                  </div>
                   {post.image && (
                     <img src={post.image} alt={post.title} className="w-full h-32 object-cover rounded my-2" />
                   )}

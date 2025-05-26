@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
 
-const Signup = () => {
+const Signup = ({ setShowSignup, showSignup }) => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -104,20 +104,27 @@ const Signup = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg overflow-y-auto max-w-md w-full p-8 relative" style={{ maxHeight: "90vh" }}>
+        <button
+          type="button"
+          onClick={() => setShowSignup(false)}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+          aria-label="Close"
+        >
+          &times;
+        </button>
         <h2 className="text-2xl font-bold mb-4">Signup</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
+            <label className="block text-gray-700">Full Name </label>
             <input
               type="text"
               name="full_name"
               value={formData.full_name}
               onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
+              className="w-full px-4 py-2  border-2 border-black rounded-md"
               required
             />
           </div>
@@ -143,7 +150,6 @@ const Signup = () => {
               required
             />
           </div>
-        
           <button
             type="submit"
             className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 flex items-center justify-center"
@@ -163,7 +169,7 @@ const Signup = () => {
           </button>
         </form>
       </div>
-    </>
+    </div>
   );
 };
 

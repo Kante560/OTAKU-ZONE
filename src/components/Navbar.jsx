@@ -16,12 +16,12 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      initial={{ background: "linear-gradient(to left, #c084fc, #6d28d9)" }}
+      initial={{ background: "linear-gradient(to left, #6d28d9, #c084fc)" }}
       animate={{
         background: [
-          "linear-gradient(to left, #c084fc, #6d28d9)",
-          "linear-gradient(to right, #a5b4fc, #a21caf)",
-          "linear-gradient(to left, #c084fc, #6d28d9)"
+          "linear-gradient(to left, #6d28d9, #c084fc)",
+          "linear-gradient(to right, #a21caf, #ef4444)",
+          "linear-gradient(to left, #6d28d9, #c084fc)"
         ]
       }}
       transition={{
@@ -29,17 +29,17 @@ export default function Navbar() {
         repeat: Infinity,
         repeatType: "loop"
       }}
-      className="sticky z-1000 top-0 w-full shadow-md py-4 px-6"
+      className="sticky z-1000 top-0 w-full shadow-md py-4 px-6 text-white bg-gradient-to-r from-purple-900 via-purple-700 to-red-600"
       style={{ backgroundSize: "200% 200%" }}
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <motion.div
-          initial={{ background: "linear-gradient(to left, #c084fc, #6d28d9)" }}
+          initial={{ background: "linear-gradient(to left, #6d28d9, #c084fc)" }}
           animate={{
             background: [
-              "linear-gradient(to left, #c084fc, #6d28d9)",
-              "linear-gradient(to left, #a5b4fc, #a21caf)",
-              "linear-gradient(to left, #c084fc, #6d28d9)"
+              "linear-gradient(to left, #6d28d9, #c084fc)",
+              "linear-gradient(to left, #a21caf, #ef4444)",
+              "linear-gradient(to left, #6d28d9, #c084fc)"
             ]
           }}
           transition={{
@@ -48,7 +48,7 @@ export default function Navbar() {
             repeatType: "loop"
           }}
           style={{ backgroundSize: "200% 200%" }}
-          className="text-2xl font-bold text-black rounded-2xl px-3.5 min-w-auto"
+          className="text-2xl font-bold text-white rounded-2xl px-3.5 min-w-auto"
         >
           <Link to="/" className="text-white bg-clip-text ">
             OTAKUVERSE

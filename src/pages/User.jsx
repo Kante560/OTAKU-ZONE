@@ -19,7 +19,7 @@ const User = () => {
         let mergedInfo = signupInfo || {};
 
         if (token && email) {
-          const res = await fetch(`https://otaku-hub-api.vercel.app/json/dashboard_read/${email}`, {
+          const res = await fetch(`https://otaku-hub-api.vercel.app/json/dashboard/${email}`, {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Token ${token}`,

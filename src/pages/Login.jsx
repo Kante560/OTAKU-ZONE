@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = ({ setShowLogin, showLogin }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -51,11 +51,17 @@ const Login = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg overflow-y-auto max-w-md w-full p-8 relative" style={{ maxHeight: "90vh" }}>
+        <button
+          onClick={() => setShowLogin(false)}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+          aria-label="Close"
+        >
+          &times;
+        </button>
         <h2 className="text-2xl font-bold mb-4">Login</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>} {/* Display error */}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700">Email</label>
@@ -98,7 +104,7 @@ const Login = () => {
           </button>
         </form>
       </div>
-    </>
+    </div>
   );
 };
 

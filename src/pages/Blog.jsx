@@ -13,6 +13,8 @@ const Blog = () => {
   const [comments, setComments] = useState({}); // { [postId]: [comment, ...] }
   const [commentInputs, setCommentInputs] = useState({}); // { [postId]: "" }
   const { isAuthenticated } = useContext(AuthContext);
+
+  // Get current user email for ownership check
   const userEmail = localStorage.getItem("user_email");
 
   useEffect(() => {
@@ -33,7 +35,7 @@ const Blog = () => {
       setLoading(false);
     };
     fetchPosts();
-  }, []);
+  }, [showForm]); // refetch posts when showForm changes (i.e., after upload)
 
   const handleCommentInput = (postId, value) => {
     setCommentInputs((prev) => ({ ...prev, [postId]: value }));
@@ -58,12 +60,43 @@ const Blog = () => {
     });
   };
 
+  // Track which posts the user has liked/disliked in local state
+  const [userReactions, setUserReactions] = useState({}); // { [postId]: 'like' | 'dislike' | undefined }
+
   const handleLike = (postId) => {
-    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        // If already liked, do nothing
+        if (userReactions[postId] === 'like') return p;
+        // If previously disliked, remove a dislike
+        let newLikes = (p.likes || 0) + 1;
+        let newDislikes = p.dislikes || 0;
+        if (userReactions[postId] === 'dislike') {
+          newDislikes = Math.max(0, newDislikes - 1);
+        }
+        return { ...p, likes: newLikes, dislikes: newDislikes };
+      })
+    );
+    setUserReactions((prev) => ({ ...prev, [postId]: 'like' }));
   };
 
   const handleDislike = (postId) => {
-    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, dislikes: (p.dislikes || 0) + 1 } : p));
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        // If already disliked, do nothing
+        if (userReactions[postId] === 'dislike') return p;
+        // If previously liked, remove a like
+        let newDislikes = (p.dislikes || 0) + 1;
+        let newLikes = p.likes || 0;
+        if (userReactions[postId] === 'like') {
+          newLikes = Math.max(0, newLikes - 1);
+        }
+        return { ...p, dislikes: newDislikes, likes: newLikes };
+      })
+    );
+    setUserReactions((prev) => ({ ...prev, [postId]: 'dislike' }));
   };
 
   // Filter posts uploaded by the current user
@@ -84,13 +117,13 @@ const Blog = () => {
           placeholder="Search blogs..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-4 py-2 border border-purple-700 bg-black text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
       </div>
       {/* Floating "+" Icon (optional, can trigger navigation or modal) */}
       <motion.button
         onClick={() => setShowForm(true)}
-        className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg text-4xl"
+        className="fixed bottom-8 right-8 z-50 bg-purple-700 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg text-4xl"
         title="Create Blog"
         aria-label="Create Blog"
         initial={{ scale: 0, opacity: 0, y: 100 }}
@@ -105,16 +138,16 @@ const Blog = () => {
         <Post setShowForm={setShowForm} showForm={showForm} />
       )}
       <div className="max-w-6xl mx-auto p-6">
-        <h2 className="text-3xl font-bold mb-6">Blogs</h2>
+        <h2 className="text-3xl font-bold mb-6 text-white">Blogs</h2>
         {loading ? (
-          <div className="text-center text-lg text-gray-500 py-10">Loading blogs...</div>
+          <div className="text-center text-lg text-purple-300 py-10">Loading blogs...</div>
         ) : (
-          <div className="space-y-6">
+          <>
             {/* User's own posts section */}
             {isAuthenticated && userPosts.length > 0 && (
               <div className="mb-10">
                 <h3 className="text-2xl font-semibold mb-4 text-purple-700">Your Uploaded Blogs</h3>
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {userPosts
                     .filter(content =>
                       (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
@@ -123,65 +156,78 @@ const Blog = () => {
                     .map((content, index) => (
                       <div
                         key={content.id || index}
-                        className="flex flex-col md:flex-row bg-purple-50 shadow-md rounded-lg overflow-hidden border border-purple-200 transform transition-transform duration-300 hover:scale-105"
+                        className="flex flex-col bg-gradient-to-r from-black via-purple-900 to-red-900 shadow-md rounded-lg overflow-hidden border border-purple-700 transform transition-transform duration-300 hover:scale-105"
                       >
                         {content.image && (
                           <Link
                             to={`/uploads/${content.id}`}
-                            className="w-full md:w-1/3 block"
-                            style={{ minWidth: 0 }}
+                            className="block group"
                           >
                             <img
                               src={content.image}
                               alt="Uploaded"
-                              className="object-cover w-full h-full overflow-hidden"
+                              className="object-cover w-full h-48 overflow-hidden transition-transform duration-300 group-hover:scale-110 bg-black"
                               style={{ pointerEvents: "none" }}
                             />
                           </Link>
                         )}
-                        <div className="p-6 flex flex-col justify-between w-full">
+                        <div className="p-6 flex flex-col justify-between w-full bg-black text-white flex-1">
                           <div className="flex justify-between items-start">
                             <Link
                               to={`/uploads/${content.id}`}
                               className="flex-1"
-                              style={{ minWidth: 0 }}
                             >
                               {content.title && (
-                                <h3 className="text-xl font-bold mb-2">{content.title}</h3>
+                                <h3 className="text-xl font-bold mb-2 text-purple-300">{content.title}</h3>
                               )}
                               {content.content && (
-                                <p className="text-gray-600 mb-4">{content.content}</p>
+                                <p className="text-purple-200 mb-4 line-clamp-3">{content.content}</p>
                               )}
                             </Link>
-                            <button onClick={() => handleDeletePost(content.id)} className="text-red-500 hover:text-red-700 text-xl">🗑️</button>
+                            {/* Show delete button only for user's own posts (debug info) */}
+                            {((content.author && (content.author === userEmail || content.author === userEmail.split('@')[0])) || content.is_owner) ? (
+                              <button
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to delete this post?')) {
+                                    fetch(`https://otaku-hub-api.vercel.app/api/post/${content.id}/`, {
+                                      method: 'DELETE',
+                                      headers: {
+                                        Authorization: `Token ${localStorage.getItem('auth_token')}`,
+                                      },
+                                    })
+                                      .then(res => {
+                                        if (res.ok) {
+                                          setPosts(prev => prev.filter(p => p.id !== content.id));
+                                          alert('Post deleted');
+                                        } else {
+                                          alert('Failed to delete post');
+                                        }
+                                      })
+                                      .catch(() => alert('Failed to delete post'));
+                                  }
+                                }}
+                                className="text-purple-400 hover:text-red-500 text-xl ml-2"
+                                title={`Delete Post | author: ${content.author} | user: ${userEmail} | owner: ${String(content.is_owner)}`}
+                              >
+                                🗑️
+                              </button>
+                            ) : null}
+                            {/* Debug info always visible for troubleshooting */}
+                            <span className="text-xs text-gray-400 block mt-1">author: {String(content.author)} | user: {String(userEmail)} | owner: {String(content.is_owner)}</span>
                           </div>
-                          <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
+                          <div className="flex flex-col gap-2 mt-4">
                             <div className="flex space-x-6 items-center">
-                              <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-green-600 hover:text-green-800">
+                              <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-purple-300 hover:text-white">
                                 👍 <span className="ml-1 text-base">{content.likes || 0}</span>
                               </button>
-                              <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-600 hover:text-red-800">
+                              <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-400 hover:text-white">
                                 👎 <span className="ml-1 text-base">{content.dislikes || 0}</span>
                               </button>
                             </div>
-                            <div className="flex items-center text-gray-500 text-sm font-semibold">
+                            <div className="flex items-center text-purple-400 text-sm font-semibold">
                               <span role="img" aria-label="comments">💬</span>
                               <span className="ml-1">Comments: 0</span>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-2 mt-4">
-                            <input
-                              type="text"
-                              placeholder="Add a comment..."
-                              className="border border-gray-300 rounded-md px-3 py-1 w-full"
-                              disabled
-                            />
-                            <button
-                              className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
-                              disabled
-                            >
-                              Comment
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -191,81 +237,69 @@ const Blog = () => {
             )}
             {/* All other posts */}
             {otherPosts.length > 0 ? (
-              otherPosts
-                .filter(content =>
-                  (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
-                  (content.content && content.content.toLowerCase().includes(search.toLowerCase()))
-                )
-                .map((content, index) => (
-                  <div
-                    key={content.id || index}
-                    className="flex flex-col md:flex-row bg-white shadow-md rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
-                  >
-                    {content.image && (
-                      <Link
-                        to={`/uploads/${content.id}`}
-                        className="w-full md:w-1/3 block"
-                        style={{ minWidth: 0 }}
-                      >
-                        <img
-                          src={content.image}
-                          alt="Uploaded"
-                          className="object-cover w-full h-full overflow-hidden transform transition-transform duration-300 hover:scale-10"
-                          style={{ pointerEvents: "none" }}
-                        />
-                      </Link>
-                    )}
-                    <div className="p-6 flex flex-col justify-between w-full">
-                      <div className="flex justify-between items-start">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {otherPosts
+                  .filter(content =>
+                    (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
+                    (content.content && content.content.toLowerCase().includes(search.toLowerCase()))
+                  )
+                  .map((content, index) => (
+                    <div
+                      key={content.id || index}
+                      className="flex flex-col bg-white shadow-md rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 border border-purple-700"
+                    >
+                      {content.image && (
                         <Link
                           to={`/uploads/${content.id}`}
-                          className="flex-1"
-                          style={{ minWidth: 0 }}
+                          className="block group"
                         >
-                          {content.title && (
-                            <h3 className="text-xl font-bold mb-2">{content.title}</h3>
-                          )}
-                          {content.content && (
-                            <p className="text-gray-600 mb-4">{content.content}</p>
-                          )}
+                          <img
+                            src={content.image}
+                            alt="Uploaded"
+                            className="object-cover w-full h-48 overflow-hidden transition-transform duration-300 group-hover:scale-110 bg-black"
+                            style={{ pointerEvents: "none" }}
+                          />
                         </Link>
-                        <button onClick={() => handleDeletePost(content.id)} className="text-red-500 hover:text-red-700 text-xl">🗑️</button>
-                      </div>
-                      <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
-                        <div className="flex space-x-6 items-center">
-                          <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-green-600 hover:text-green-800">
-                            👍 <span className="ml-1 text-base">{content.likes || 0}</span>
-                          </button>
-                          <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-600 hover:text-red-800">
-                            👎 <span className="ml-1 text-base">{content.dislikes || 0}</span>
-                          </button>
+                      )}
+                      <div className="p-6 flex flex-col justify-between w-full bg-black text-white flex-1">
+                        <div className="flex justify-between items-start">
+                          <Link
+                            to={`/uploads/${content.id}`}
+                            className="flex-1"
+                          >
+                            {content.title && (
+                              <h3 className="text-xl font-bold mb-2 text-white">{content.title}</h3>
+                            )}
+                            {content.content && (
+                              <p className="text-white mb-4 line-clamp-3">{content.content}</p>
+                            )}
+                          </Link>
+                          {((content.author && (content.author === userEmail || content.author === userEmail.split('@')[0])) || content.is_owner) && (
+                            <button onClick={() => handleDeletePost(content.id)} className="text-purple-400 hover:text-red-500 text-xl">🗑️</button>
+                          )}
                         </div>
-                        <div className="flex items-center text-gray-500 text-sm font-semibold">
-                          <span role="img" aria-label="comments">💬</span>
-                          <span className="ml-1">Comments: 0</span>
+                        <div className="flex flex-col gap-2 mt-4">
+                          <div className="flex space-x-6 items-center">
+                            <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-white hover:text-purple-300">
+                              👍 <span className="ml-1 text-base">{content.likes || 0}</span>
+                            </button>
+                            <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-400 hover:text-white">
+                              👎 <span className="ml-1 text-base">{content.dislikes || 0}</span>
+                            </button>
+                          </div>
+                          <div className="flex items-center text-purple-400 text-sm font-semibold">
+                            <span role="img" aria-label="comments">💬</span>
+                            <span className="ml-1">Comments: 0</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2 mt-4">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          className="border border-gray-300 rounded-md px-3 py-1 w-full"
-                          disabled
-                        />
-                        <button
-                          className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
-                          disabled
-                        >
-                          Comment
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+              </div>
             ) : (
               <p className="text-center text-lg text-gray-500 py-10">No blogs uploaded yet.</p>
             )}
-          </div>
+          </>
         )}
       </div>
     </>
