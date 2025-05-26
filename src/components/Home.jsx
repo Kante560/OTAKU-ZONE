@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import Signup from "../pages/Signup";
-import Login from "../pages/login";
+import Login from "../pages/Login";
 import { useState } from "react";
 
 export default function Home() {
