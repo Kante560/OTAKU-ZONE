@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Post = ({ setShowForm, showForm }) => {
+const Post = ({ setShowForm, showForm, onPostUploaded }) => {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState(null); // This will be the backend URL
   const [writeUp, setWriteUp] = useState("");
@@ -23,13 +23,17 @@ const Post = ({ setShowForm, showForm }) => {
 
   // Upload blog post to backend
   const sendPost = async () => {
+    if (!title.trim() || !writeUp.trim()) {
+      alert("Title and content are required.");
+      return;
+    }
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("title", title);
-      formData.append("content", writeUp); // changed from writeUp to content
+      formData.append("content", writeUp);
       if (imageFile) {
-        formData.append("file", imageFile);
+        formData.append("image", imageFile); // Correct field name
       }
       const res = await fetch("https://otaku-hub-api.vercel.app/api/post/", {
         method: "POST",
@@ -50,6 +54,7 @@ const Post = ({ setShowForm, showForm }) => {
       setWriteUp("");
       setShowForm(false);
       setLoading(false);
+      if (typeof onPostUploaded === 'function') onPostUploaded();
       alert("Blog uploaded!");
     } catch (e) {
       alert("Failed to post blog");
