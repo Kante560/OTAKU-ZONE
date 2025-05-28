@@ -169,32 +169,7 @@ const Post = ({ setShowForm, showForm, onPostUploaded }) => {
           </div>
         </div>
         {/* Show all uploaded posts below the form */}
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold mb-4">All Uploaded Posts</h3>
-          <div className="space-y-4 max-h-64 overflow-y-auto">
-            {posts.length === 0 ? (
-              <div className="text-gray-500">No posts yet.</div>
-            ) : (
-              posts.map((post) => (
-                <div key={post.id} className="border rounded p-3 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div className="font-bold text-lg">{post.title}</div>
-                    {/* Fix: check for both author (email or username) and is_owner, and log for debug */}
-                    {((post.author && (post.author === userEmail || post.author === userEmail.split('@')[0])) || post.is_owner) ? (
-                      <button onClick={() => handleDeletePost(post.id)} className="text-red-500 hover:text-red-700 text-xl">🗑️</button>
-                    ) : (
-                      <span className="text-xs text-gray-400">{/* Debug: {post.author} | {userEmail} | {String(post.is_owner)} */}</span>
-                    )}
-                  </div>
-                  {post.image && (
-                    <img src={post.image} alt={post.title} className="w-full h-32 object-cover rounded my-2" />
-                  )}
-                  <div className="text-gray-700">{post.content}</div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        
       </div>
     </div>
   );

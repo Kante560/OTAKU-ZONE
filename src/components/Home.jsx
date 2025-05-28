@@ -47,13 +47,13 @@ export default function Home() {
             ) : (
               <>
                 <button
-                  className="bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-800"
+                  className="bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-purple-600"
                   onClick={() => setShowSignup(true)}
                 >
                   Signup
                 </button>
                 <button
-                  className="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-700 transition-colors"
+                  className="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-500 transition-colors"
                   onClick={() => setShowLogin(true)}
                 >
                   Login

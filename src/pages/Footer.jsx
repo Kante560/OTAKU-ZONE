@@ -58,7 +58,7 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Your email"
-                className="py-2 px-4 rounded-lg text-gray-700 border border-gray-300"
+                className="py-2 px-4 rounded-lg active:outline-none focus:border-white text-white border border-white"
               />
               <button 
                 onClick={() => alert('subscribed')}

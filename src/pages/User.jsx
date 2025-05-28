@@ -103,10 +103,7 @@ const User = () => {
                   {userInfo.name || userInfo.username || userInfo.full_name || ""}
                 </p>
               </div>
-              <div>
-                <p className="text-lg font-semibold text-gray-700 mb-1">Gender</p>
-                <p className="text-xl text-gray-900 tracking-wide">{userInfo.gender || ""}</p>
-              </div>
+             
               <div>
                 <p className="text-lg font-semibold text-gray-700 mb-1">Email</p>
                 <p className="text-xl text-gray-900 tracking-wide">{userInfo.email || ""}</p>

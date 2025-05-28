@@ -54,13 +54,16 @@ const Login = ({ setShowLogin, showLogin }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg overflow-y-auto max-w-md w-full p-8 relative" style={{ maxHeight: "90vh" }}>
         <button
-          onClick={() => setShowLogin(false)}
+          onClick={() => {
+            if (setShowLogin) setShowLogin(false);
+            else navigate(-1);
+          }}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
           aria-label="Close"
         >
           &times;
         </button>
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
+        <h2 className="text-2xl text-black font-bold text-center mb-4">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -70,7 +73,7 @@ const Login = ({ setShowLogin, showLogin }) => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
+              className="w-full px-4 py-2 border border-black rounded-md"
               required
             />
           </div>
@@ -81,13 +84,13 @@ const Login = ({ setShowLogin, showLogin }) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
+              className="w-full px-4 py-2 border border-black rounded-md"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 flex items-center justify-center"
+            className="w-1/2 bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 flex items-center justify-center"
             disabled={loading}
           >
             {loading ? (

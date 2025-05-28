@@ -237,8 +237,8 @@ const Blog = () => {
                             </Link>
                            
                             {/* Debug info always visible for troubleshooting */}
-                            <span className="text-xs text-gray-400 block mt-1">author: {String(content.author)} | user: {String(userEmail)} | owner: {String(content.is_owner)}</span>
-                          </div>
+                            {/* <span className="text-xs text-gray-400 block mt-1">author: {String(content.author)} | user: {String(userEmail)} | owner: {String(content.is_owner)}</span>*/}
+                          </div> 
                           <div className="flex flex-col gap-2 mt-4">
                             <div className="flex space-x-6 items-center">
                               <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-purple-300 hover:text-white">
@@ -304,7 +304,7 @@ const Blog = () => {
                 </div>
               </div>
             )}
-            {/* All other posts */}
+     
             {otherPosts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {otherPosts
@@ -340,7 +340,7 @@ const Blog = () => {
                               <h3 className="text-xl font-bold mb-2 text-white">{content.title}</h3>
                             )}
                             {content.content && (
-                              <p className="text-white mb-4 line-clamp-3">{content.content}</p>
+                              <p className="text-white mb-4 w-[80%] line-clamp-3">{content.content}</p>
                             )}
                           </Link>
                           {((content.author && (content.author === userEmail || content.author === userEmail.split('@')[0])) || content.is_owner) && (
@@ -393,6 +393,7 @@ const Blog = () => {
                                 <span role="img" aria-label="delete">🗑️</span>
                               </button>
                             )}
+                   
                         {/* Comments Section */}
                         <div className="mt-4">
                           <form
@@ -443,7 +444,7 @@ const Blog = () => {
                   ))}
               </div>
             ) : (
-              <p className="text-center text-lg text-gray-500 py-10">No blogs uploaded yet.</p>
+              <p className="text-center text-lg text-gray-500 py-10">Sign up/ Login to see blogs (kante's laws).</p>
             )}          </>
         )}
       </div>

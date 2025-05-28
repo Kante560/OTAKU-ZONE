@@ -275,7 +275,7 @@ const Uploads = () => {
                 className="w-full rounded-lg mb-6"
               />
             )}
-            <div className="mb-6 text-lg text-gray-800">{blog.content}</div>
+            <div className="mb-6 text-lg block  overflow-x-hidden text-gray-800">{blog.content}</div>
             <div className="flex items-center gap-6 mb-4">
               <span className="font-semibold text-purple-700">
                 Comments ({comments.length})
