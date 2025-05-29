@@ -33,7 +33,7 @@ const Post = ({ setShowForm, showForm, onPostUploaded }) => {
       formData.append("title", title);
       formData.append("content", writeUp);
       if (imageFile) {
-        formData.append("image", imageFile); // Correct field name
+        formData.append("file", imageFile); // Correct field name
       }
       const res = await fetch("https://otaku-hub-api.vercel.app/api/post/", {
         method: "POST",

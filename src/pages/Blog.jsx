@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext } from "react";
 import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Post from './Post';
+import Post from "./Post";
 import { AuthContext } from "../context/AuthContext";
+import Delete from "../pages/Delete";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Blog = () => {
   const [posts, setPosts] = useState([]);
@@ -32,9 +35,12 @@ const Blog = () => {
         const postsWithComments = await Promise.all(
           data.map(async (post) => {
             try {
-              const cres = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${post.id}/comments/`, {
-                headers: token ? { Authorization: `Token ${token}` } : {},
-              });
+              const cres = await fetch(
+                `https://otaku-hub-api.vercel.app/api/posts/${post.id}/comments/`,
+                {
+                  headers: token ? { Authorization: `Token ${token}` } : {},
+                }
+              );
               if (cres.ok) {
                 const comments = await cres.json();
                 return { ...post, comments, commentsCount: comments.length };
@@ -50,7 +56,10 @@ const Blog = () => {
       setLoading(false);
     };
     fetchPosts();
-  }, [showForm, posts.map(p => p.comments ? p.comments.length : 0).join(",")]); // refetch posts when showForm changes (i.e., after upload)
+  }, [
+    showForm,
+    posts.map((p) => (p.comments ? p.comments.length : 0)).join(","),
+  ]); // refetch posts when showForm changes (i.e., after upload)
 
   const handleCommentInput = (postId, value) => {
     setCommentInputs((prev) => ({ ...prev, [postId]: value }));
@@ -66,100 +75,162 @@ const Blog = () => {
     setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-    try {
-      const res = await fetch(`https://otaku-hub-api.vercel.app/api/post/${postId}/`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Token ${localStorage.getItem("auth_token")}`,
-        },
-      });
-      if (res.status === 204) {
-        setPosts(posts.filter((post) => post.id !== postId));
-        alert("Post deleted");
-      } else {
-        alert("Failed to delete post");
-      }
-    } catch (e) {
-      alert("Failed to delete post");
-    }
-  };
-
   // Track which posts the user has liked/disliked in local state
   const [userReactions, setUserReactions] = useState({}); // { [postId]: 'like' | 'dislike' | undefined }
 
   // Like/dislike handlers with backend integration
   const handleLike = async (postId) => {
     try {
-      const res = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${postId}/like/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Token ${localStorage.getItem('auth_token')}`,
-        },
-      });
+      const res = await fetch(
+        `https://otaku-hub-api.vercel.app/api/posts/${postId}/like/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${localStorage.getItem("auth_token")}`,
+          },
+        }
+      );
       if (res.ok) {
         // Refetch comments and likes/dislikes for this post only
-        const cres = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${postId}/comments/`, {
-          headers: { Authorization: `Token ${localStorage.getItem('auth_token')}` },
-        });
+        const cres = await fetch(
+          `https://otaku-hub-api.vercel.app/api/posts/${postId}/comments/`,
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("auth_token")}`,
+            },
+          }
+        );
         const comments = cres.ok ? await cres.json() : [];
-        const pres = await fetch(`https://otaku-hub-api.vercel.app/api/post/${postId}/`);
+        const pres = await fetch(
+          `https://otaku-hub-api.vercel.app/api/post/${postId}/`
+        );
         const postData = pres.ok ? await pres.json() : {};
-        setPosts(prev => prev.map(p =>
-          p.id === postId
-            ? { ...p, likes: postData.likes, dislikes: postData.dislikes, comments, commentsCount: comments.length }
-            : p
-        ));
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: postData.likes,
+                  dislikes: postData.dislikes,
+                  comments,
+                  commentsCount: comments.length,
+                }
+              : p
+          )
+        );
+        toast.success("Post liked!");
       } else {
-        alert('Failed to like post');
+        toast.error("Failed to like post");
       }
     } catch {
-      alert('Failed to like post');
+      toast.error("Failed to like post");
     }
   };
 
   const handleDislike = async (postId) => {
     try {
-      const res = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${postId}/dislike/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Token ${localStorage.getItem('auth_token')}`,
-        },
-      });
+      const res = await fetch(
+        `https://otaku-hub-api.vercel.app/api/posts/${postId}/dislike/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${localStorage.getItem("auth_token")}`,
+          },
+        }
+      );
       if (res.ok) {
         // Refetch comments and likes/dislikes for this post only
-        const cres = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${postId}/comments/`, {
-          headers: { Authorization: `Token ${localStorage.getItem('auth_token')}` },
-        });
+        const cres = await fetch(
+          `https://otaku-hub-api.vercel.app/api/posts/${postId}/comments/`,
+          {
+            headers: {
+              Authorization: `Token ${localStorage.getItem("auth_token")}`,
+            },
+          }
+        );
         const comments = cres.ok ? await cres.json() : [];
-        const pres = await fetch(`https://otaku-hub-api.vercel.app/api/post/${postId}/`);
+        const pres = await fetch(
+          `https://otaku-hub-api.vercel.app/api/post/${postId}/`
+        );
         const postData = pres.ok ? await pres.json() : {};
-        setPosts(prev => prev.map(p =>
-          p.id === postId
-            ? { ...p, likes: postData.likes, dislikes: postData.dislikes, comments, commentsCount: comments.length }
-            : p
-        ));
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: postData.likes,
+                  dislikes: postData.dislikes,
+                  comments,
+                  commentsCount: comments.length,
+                }
+              : p
+          )
+        );
+        toast.success("Post disliked!");
       } else {
-        alert('Failed to dislike post');
+        toast.error("Failed to dislike post");
       }
     } catch {
-      alert('Failed to dislike post');
+      toast.error("Failed to dislike post");
     }
   };
 
   // Filter posts uploaded by the current user
   const userPosts = userEmail
-    ? posts.filter((p) => (p.author && (p.author === userEmail || p.author === userEmail.split('@')[0])))
+    ? posts.filter(
+        (p) =>
+          p.author &&
+          (p.author === userEmail || p.author === userEmail.split("@")[0])
+      )
     : [];
   const otherPosts = userEmail
-    ? posts.filter((p) => !(p.author && (p.author === userEmail || p.author === userEmail.split('@')[0])))
+    ? posts.filter(
+        (p) =>
+          !(
+            p.author &&
+            (p.author === userEmail || p.author === userEmail.split("@")[0])
+          )
+      )
     : posts;
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      const res = await fetch(
+        `https://otaku-hub-api.vercel.app/api/post/${postId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${localStorage.getItem("auth_token")}`,
+          },
+        }
+      );
+      if (res.status === 204) {
+        setPosts(posts.filter((post) => post.id !== postId));
+        toast.success("Post deleted");
+      } else {
+        toast.error("Failed to delete post");
+      }
+    } catch (e) {
+      toast.error("Failed to delete post");
+    }
+  };
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <Navbar />
       {/* Search Bar */}
       <div className="max-w-3xl mx-auto mt-6 mb-4 px-4">
@@ -167,7 +238,7 @@ const Blog = () => {
           type="text"
           placeholder="Search blogs..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 border border-purple-700 bg-black text-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
       </div>
@@ -186,23 +257,38 @@ const Blog = () => {
         +
       </motion.button>
       {showForm && (
-        <Post setShowForm={setShowForm} showForm={showForm} onPostUploaded={() => setShowForm(false)} />
+        <Post
+          setShowForm={setShowForm}
+          showForm={showForm}
+          onPostUploaded={() => setShowForm(false)}
+        />
       )}
       <div className="max-w-6xl mx-auto p-6">
         <h2 className="text-3xl font-bold mb-6 text-white">Blogs</h2>
         {loading ? (
-          <div className="text-center text-lg text-purple-300 py-10">Loading blogs...</div>
+          <div className="text-center text-lg text-purple-300 py-10">
+            Loading blogs...
+          </div>
         ) : (
           <>
             {/* User's own posts section */}
             {isAuthenticated && userPosts.length > 0 && (
               <div className="mb-10">
-                <h3 className="text-2xl font-semibold mb-4 text-purple-700">Your Uploaded Blogs</h3>
+                <h3 className="text-2xl font-semibold mb-4 text-purple-700">
+                  Your Uploaded Blogs
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {userPosts
-                    .filter(content =>
-                      (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
-                      (content.content && content.content.toLowerCase().includes(search.toLowerCase()))
+                    .filter(
+                      (content) =>
+                        (content.title &&
+                          content.title
+                            .toLowerCase()
+                            .includes(search.toLowerCase())) ||
+                        (content.content &&
+                          content.content
+                            .toLowerCase()
+                            .includes(search.toLowerCase()))
                     )
                     .map((content, index) => (
                       <div
@@ -229,28 +315,52 @@ const Blog = () => {
                               className="flex-1"
                             >
                               {content.title && (
-                                <h3 className="text-xl font-bold mb-2 text-purple-300">{content.title}</h3>
+                                <h3 className="text-xl font-bold mb-2 text-purple-300">
+                                  {content.title}
+                                </h3>
                               )}
                               {content.content && (
-                                <p className="text-purple-200 mb-4 line-clamp-3">{content.content}</p>
+                                <p className="text-purple-200 mb-4 line-clamp-3">
+                                  {content.content}
+                                </p>
                               )}
                             </Link>
-                           
+
                             {/* Debug info always visible for troubleshooting */}
                             {/* <span className="text-xs text-gray-400 block mt-1">author: {String(content.author)} | user: {String(userEmail)} | owner: {String(content.is_owner)}</span>*/}
-                          </div> 
+                          </div>
                           <div className="flex flex-col gap-2 mt-4">
                             <div className="flex space-x-6 items-center">
-                              <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-purple-300 hover:text-white">
-                                👍 <span className="ml-1 text-base">{content.likes || 0}</span>
+                              <button
+                                onClick={() => handleLike(content.id)}
+                                className="flex items-center text-2xl text-purple-300 hover:text-white"
+                              >
+                                👍{" "}
+                                <span className="ml-1 text-base">
+                                  {content.likes || 0}
+                                </span>
                               </button>
-                              <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-400 hover:text-white">
-                                👎 <span className="ml-1 text-base">{content.dislikes || 0}</span>
+                              <button
+                                onClick={() => handleDislike(content.id)}
+                                className="flex items-center text-2xl text-red-400 hover:text-white"
+                              >
+                                👎{" "}
+                                <span className="ml-1 text-base">
+                                  {content.dislikes || 0}
+                                </span>
                               </button>
                             </div>
                             <div className="flex items-center text-purple-400 text-sm font-semibold">
-                              <span role="img" aria-label="comments">💬</span>
-                              <span className="ml-1">Comments: {content.commentsCount ?? (content.comments ? content.comments.length : 0)}</span>
+                              <span role="img" aria-label="comments">
+                                💬
+                              </span>
+                              <span className="ml-1">
+                                Comments:{" "}
+                                {content.commentsCount ??
+                                  (content.comments
+                                    ? content.comments.length
+                                    : 0)}
+                              </span>
                             </div>
                           </div>
                           {/* Comments Section */}
@@ -258,31 +368,51 @@ const Blog = () => {
                             <form
                               onSubmit={async (e) => {
                                 e.preventDefault();
-                                const commentText = e.target.elements[`comment-input-${content.id}`].value.trim();
+                                const commentText =
+                                  e.target.elements[
+                                    `comment-input-${content.id}`
+                                  ].value.trim();
                                 if (!commentText) return;
                                 try {
-                                  const res = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${content.id}/comments/`, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      Authorization: `Token ${localStorage.getItem('auth_token')}`,
-                                    },
-                                    body: JSON.stringify({ content: commentText }),
-                                  });
+                                  const res = await fetch(
+                                    `https://otaku-hub-api.vercel.app/api/posts/${content.id}/comments/`,
+                                    {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Token ${localStorage.getItem(
+                                          "auth_token"
+                                        )}`,
+                                      },
+                                      body: JSON.stringify({
+                                        content: commentText,
+                                      }),
+                                    }
+                                  );
                                   if (res.ok) {
                                     const newComment = await res.json();
-                                    setPosts(prev => prev.map(p =>
-                                      p.id === content.id
-                                        ? { ...p, comments: [...(p.comments || []), newComment], commentsCount: (p.commentsCount || 0) + 1 }
-                                        : p
-                                    ));
+                                    setPosts((prev) =>
+                                      prev.map((p) =>
+                                        p.id === content.id
+                                          ? {
+                                              ...p,
+                                              comments: [
+                                                ...(p.comments || []),
+                                                newComment,
+                                              ],
+                                              commentsCount:
+                                                (p.commentsCount || 0) + 1,
+                                            }
+                                          : p
+                                      )
+                                    );
                                     e.target.reset();
-                                    alert('Comment sent!');
+                                    toast.success("Comment sent!");
                                   } else {
-                                    alert('Failed to post comment');
+                                    toast.error("Failed to post comment");
                                   }
                                 } catch {
-                                  alert('Failed to post comment');
+                                  toast.error("Failed to post comment");
                                 }
                               }}
                               className="flex gap-2 mb-2"
@@ -294,9 +424,13 @@ const Blog = () => {
                                 className="flex-1 px-3 py-1 rounded bg-gray-900 text-white border border-purple-700 focus:outline-none"
                                 required
                               />
-                              <button type="submit" className="bg-purple-700 text-white px-3 py-1 rounded hover:bg-purple-900">Reply</button>
+                              <button
+                                type="submit"
+                                className="bg-purple-700 text-white px-3 py-1 rounded hover:bg-purple-900"
+                              >
+                                Reply
+                              </button>
                             </form>
-                           
                           </div>
                         </div>
                       </div>
@@ -304,13 +438,19 @@ const Blog = () => {
                 </div>
               </div>
             )}
-     
             {otherPosts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {otherPosts
-                  .filter(content =>
-                    (content.title && content.title.toLowerCase().includes(search.toLowerCase())) ||
-                    (content.content && content.content.toLowerCase().includes(search.toLowerCase()))
+                  .filter(
+                    (content) =>
+                      (content.title &&
+                        content.title
+                          .toLowerCase()
+                          .includes(search.toLowerCase())) ||
+                      (content.content &&
+                        content.content
+                          .toLowerCase()
+                          .includes(search.toLowerCase()))
                   )
                   .map((content, index) => (
                     <div
@@ -337,93 +477,133 @@ const Blog = () => {
                             className="flex-1"
                           >
                             {content.title && (
-                              <h3 className="text-xl font-bold mb-2 text-white">{content.title}</h3>
+                              <h3 className="text-xl font-bold mb-2 text-white">
+                                {content.title}
+                              </h3>
                             )}
                             {content.content && (
-                              <p className="text-white mb-4 w-[80%] line-clamp-3">{content.content}</p>
+                              <p className="text-white mb-4 w-[80%] line-clamp-3">
+                                {content.content}
+                              </p>
                             )}
                           </Link>
-                          {((content.author && (content.author === userEmail || content.author === userEmail.split('@')[0])) || content.is_owner) && (
-                            <button onClick={() => handleDeletePost(content.id)} className="text-purple-400 hover:text-red-500 text-xl">🗑️</button>
+
+
+
+                          <Delete   content={content} setPosts={setPosts} />
+                          {/*                           
+
+                          {content.owner === parseInt(userId) && (
+                            
                           )}
+                          <div style={{ fontSize: 10, color: "#aaa" }}>
+                            author: {String(content.author)} | user:{" "}
+                            {String(userEmail)} | owner:{" "}
+                            {String(content.is_owner)}
+                          </div> */}
+                          {/* {content.owner != null && parseInt(content.owner) === parseInt(userId) && ( */}
+                          {/* <button
+                            //   onClick={() => handleDeletePost(content.id)}
+                            //   className="text-red-500 hover:text-white hover:bg-red-600 transition-colors duration-200 rounded-full p-2 ml-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400 z-20 text-xl"
+                            //   title="Delete Post"
+                            //   style={{
+                            //     display: "flex",
+                            //     alignItems: "center",
+                            //     justifyContent: "center",
+                            //     fontSize: 24,
+                            //     background: "rgba(255,255,255,0.1)",
+                            //   }}
+                            // >
+                            //   <span role="img" aria-label="delete">
+                            //     🗑️
+                            //   </span>
+                            // </button> */}
                         </div>
                         <div className="flex flex-col gap-2 mt-4">
                           <div className="flex space-x-6 items-center">
-                            <button onClick={() => handleLike(content.id)} className="flex items-center text-2xl text-white hover:text-purple-300">
-                              👍 <span className="ml-1 text-base">{content.likes || 0}</span>
+                            <button
+                              onClick={() => handleLike(content.id)}
+                              className="flex items-center text-2xl text-white hover:text-purple-300"
+                            >
+                              👍{" "}
+                              <span className="ml-1 text-base">
+                                {content.likes || 0}
+                              </span>
                             </button>
-                            <button onClick={() => handleDislike(content.id)} className="flex items-center text-2xl text-red-400 hover:text-white">
-                              👎 <span className="ml-1 text-base">{content.dislikes || 0}</span>
+                            <button
+                              onClick={() => handleDislike(content.id)}
+                              className="flex items-center text-2xl text-red-400 hover:text-white"
+                            >
+                              👎{" "}
+                              <span className="ml-1 text-base">
+                                {content.dislikes || 0}
+                              </span>
                             </button>
                           </div>
                           <div className="flex items-center text-purple-400 text-sm font-semibold">
-                            <span role="img" aria-label="comments">💬</span>
-                            <span className="ml-1">Comments: {content.commentsCount ?? (content.comments ? content.comments.length : 0)}</span>
+                            <span role="img" aria-label="comments">
+                              💬
+                            </span>
+                            <span className="ml-1">
+                              Comments:{" "}
+                              {content.commentsCount ??
+                                (content.comments
+                                  ? content.comments.length
+                                  : 0)}
+                            </span>
                           </div>
                         </div>
-                         {/* Show delete button only for user's own posts */}
-                            {((content.author && (content.author === userEmail || content.author === userEmail.split('@')[0])) || content.is_owner) && (
-                              <button
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (window.confirm('Are you sure you want to delete this post?')) {
-                                    try {
-                                      const res = await fetch(`https://otaku-hub-api.vercel.app/api/post/${content.id}/`, {
-                                        method: 'DELETE',
-                                        headers: {
-                                          Authorization: `Token ${localStorage.getItem('auth_token')}`,
-                                        },
-                                      });
-                                      if (res.status === 204) {
-                                        setPosts(prev => prev.filter(p => p.id !== content.id));
-                                        alert('Post deleted');
-                                      } else {
-                                        alert('Failed to delete post');
-                                      }
-                                    } catch {
-                                      alert('Failed to delete post');
-                                    }
-                                  }
-                                }}
-                                className="text-red-500 hover:text-white hover:bg-red-600 transition-colors duration-200 rounded-full p-2 ml-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
-                                title="Delete Post"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, background: 'rgba(255,255,255,0.1)' }}
-                              >
-                                <span role="img" aria-label="delete">🗑️</span>
-                              </button>
-                            )}
-                   
+
                         {/* Comments Section */}
                         <div className="mt-4">
                           <form
                             onSubmit={async (e) => {
                               e.preventDefault();
-                              const commentText = e.target.elements[`comment-input-${content.id}`].value.trim();
+                              const commentText =
+                                e.target.elements[
+                                  `comment-input-${content.id}`
+                                ].value.trim();
                               if (!commentText) return;
                               try {
-                                const res = await fetch(`https://otaku-hub-api.vercel.app/api/posts/${content.id}/comments/`, {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    Authorization: `Token ${localStorage.getItem('auth_token')}`,
-                                  },
-                                  body: JSON.stringify({ content: commentText }),
-                                });
+                                const res = await fetch(
+                                  `https://otaku-hub-api.vercel.app/api/posts/${content.id}/comments/`,
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Token ${localStorage.getItem(
+                                        "auth_token"
+                                      )}`,
+                                    },
+                                    body: JSON.stringify({
+                                      content: commentText,
+                                    }),
+                                  }
+                                );
                                 if (res.ok) {
                                   const newComment = await res.json();
-                                  setPosts(prev => prev.map(p =>
-                                    p.id === content.id
-                                      ? { ...p, comments: [...(p.comments || []), newComment], commentsCount: (p.commentsCount || 0) + 1 }
-                                      : p
-                                  ));
+                                  setPosts((prev) =>
+                                    prev.map((p) =>
+                                      p.id === content.id
+                                        ? {
+                                            ...p,
+                                            comments: [
+                                              ...(p.comments || []),
+                                              newComment,
+                                            ],
+                                            commentsCount:
+                                              (p.commentsCount || 0) + 1,
+                                          }
+                                        : p
+                                    )
+                                  );
                                   e.target.reset();
-                                  alert('Comment sent!');
+                                  toast.success("Comment sent!");
                                 } else {
-                                  alert('Failed to post comment');
+                                  toast.error("Failed to post comment");
                                 }
                               } catch {
-                                alert('Failed to post comment');
+                                toast.error("Failed to post comment");
                               }
                             }}
                             className="flex gap-2 mb-2"
@@ -435,17 +615,24 @@ const Blog = () => {
                               className="flex-1 px-3 py-1 rounded bg-gray-900 text-white border border-purple-700 focus:outline-none"
                               required
                             />
-                            <button type="submit" className="bg-purple-700 text-white px-3 py-1 rounded hover:bg-purple-900">Reply</button>
+                            <button
+                              type="submit"
+                              className="bg-purple-700 text-white px-3 py-1 rounded hover:bg-purple-900"
+                            >
+                              Reply
+                            </button>
                           </form>
-                     
                         </div>
                       </div>
                     </div>
                   ))}
               </div>
             ) : (
-              <p className="text-center text-lg text-gray-500 py-10">Sign up/ Login to see blogs (kante's laws).</p>
-            )}          </>
+              <p className="text-center text-lg text-gray-500 py-10">
+                Sign up/ Login to see blogs (kante's laws).
+              </p>
+            )}{" "}
+          </>
         )}
       </div>
     </>

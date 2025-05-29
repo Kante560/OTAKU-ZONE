@@ -9,10 +9,25 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Uploads from "./pages/Uploads";
 import PrivateRoute from "./routes/PrivateRoute";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
   return (
+    
     <AuthProvider>
+        <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/blog" element={<Blog />} />
@@ -28,5 +43,7 @@ export default function App() {
       </Routes>
       <Footer />
     </AuthProvider>
+    
+
   );
 }

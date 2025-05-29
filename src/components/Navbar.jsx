@@ -2,19 +2,28 @@ import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { motion } from "framer-motion";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Navbar() {
   const { isAuthenticated, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
+
+  
+
   const handleLogout = () => {
     logout();
     navigate("/");
     setMenuOpen(false);
+    toast.success("You have been logged out.");
   };
 
   return (
+    <>
+ 
+  
     <motion.nav
       initial={{ background: "linear-gradient(to left, #6d28d9, #c084fc)" }}
       animate={{
@@ -208,5 +217,9 @@ export default function Navbar() {
         </div>
       )}
     </motion.nav>
+    
+    </>
   );
+
+    
 }
